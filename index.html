@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ระบบตรวจข้อสอบ OMR</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<style id="pg"></style>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--tx:#1d1d1b;--mu:#6b6a64;--ac:#2f6f5e;--ac2:#e8f1ee;--bd:#dddbd3;--bad:#c0392b;--ok:#1e8449;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171816;--card:#222420;--tx:#eceae3;--mu:#a09e94;--ac:#6cc1a8;--ac2:#27352f;--bd:#3a3c36;--bad:#ef7b6e;--ok:#58c27d}}
+:root[data-theme="dark"]{--bg:#171816;--card:#222420;--tx:#eceae3;--mu:#a09e94;--ac:#6cc1a8;--ac2:#27352f;--bd:#3a3c36;--bad:#ef7b6e;--ok:#58c27d}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:Sarabun,Tahoma,"Noto Sans Thai",sans-serif;line-height:1.5}
+.wrap{max-width:1000px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:4px 0 12px}
+.tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+#tabs button{flex:1;min-width:110px}
+button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 14px;border-radius:8px;cursor:pointer}
+button.on,.pri{background:var(--ac);color:#fff;border-color:var(--ac)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:13px;color:var(--mu);margin:8px 0 2px}
+input,select,textarea{width:100%;font:inherit;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx)}
+.row{display:flex;gap:8px}.row>*{flex:1}
+#sheet{background:#fff;border:1px solid var(--bd);box-shadow:0 2px 10px rgba(0,0,0,.12);margin:0 auto}
+.kg{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:2px 12px;margin-top:10px}
+.kr{display:flex;align-items:center;gap:4px}.kr b{width:28px;text-align:right;font-size:13px;margin-right:4px}
+.kb{padding:3px 0;width:30px;font-size:13px}
+.kb.on{background:var(--ac);color:#fff}
+.chip{display:inline-block;min-width:3em;text-align:center;padding:2px 6px;border-radius:6px;font-size:12px;margin:2px}
+.c1{background:rgba(30,132,73,.18);color:var(--ok)}.c0{background:rgba(192,57,43,.16);color:var(--bad)}.cn{background:var(--ac2);color:var(--mu)}
+textarea{resize:vertical;line-height:1.4}
+.rbox{margin-top:12px;padding:10px;border:1px dashed var(--ac);border-radius:10px;background:var(--ac2)}
+.rbox label:first-child{margin-top:0;color:var(--tx);font-weight:600}
+.ck{display:flex!important;gap:6px;align-items:center}.ck input{width:auto}
+#pa{display:none}
+canvas,video{width:100%;height:auto;border-radius:8px;display:block;background:#000}
+.big{font-size:32px;font-weight:600;color:var(--ac)}
+.mu{color:var(--mu);font-size:13px}
+.hide{display:none}
+.li{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--bd)}
+.li span{flex:1;min-width:0}
+@media print{
+ :root{padding:0!important}
+ body{background:#fff}
+ .noprint{display:none!important}
+ #t1{display:block!important}.wrap{padding:0;max-width:none}
+ .prev{display:none!important}
+ #pa{display:block}
+ #pa .pg{width:var(--pw);height:calc(var(--ph) - .5mm);overflow:hidden;break-after:page;page-break-after:always}
+ #pa .pg:last-child{break-after:auto;page-break-after:auto}
+ #pa svg{width:var(--pw)!important;height:var(--ph)}
+}
+</style></head><body><div class="wrap">
+<div class="noprint"><h1>📝 ระบบกระดาษคำตอบและตรวจข้อสอบ</h1>
+<div class="tabs" id="sets"></div>
+<div class="tabs" id="tabs"><button data-t="t1" class="on">1 ตั้งค่า / พิมพ์</button><button data-t="t2">2 ใส่เฉลย</button><button data-t="t3">3 สแกนตรวจ</button></div></div>
+
+<section id="t1" class="grid">
+ <div class="card panel noprint">
+  <label>ชื่อชุดข้อสอบ</label><input id="sn">
+  <label>ขนาดกระดาษ</label>
+  <select id="pp"><option value="a4">A4 (1 แผ่นต่อ 1 หน้า)</option><option value="a5">A5 (1 แผ่นต่อ 1 หน้า)</option><option value="a4x2">A4 แนวนอน พิมพ์ 2 ใบ (ตัดครึ่งเป็น A5)</option></select>
+  <div class="row"><div><label id="nl">จำนวนข้อ</label><input type="number" id="n" min="1" max="100"></div>
+  <div><label>ตัวเลือกต่อข้อ</label><select id="k"><option value="4">4 (A–D)</option><option value="5">5 (A–E)</option></select></div>
+  <div><label>รูปแบบตัวเลือก</label><select id="ls"><option value="en">A B C D E</option><option value="th">ก ข ค ง จ</option><option value="num">1 2 3 4 5</option></select></div></div>
+  <div id="flds"></div>
+  <div class="rbox">
+   <label>📋 รายชื่อนักเรียน — วางจาก Excel ได้เลย (1 แถว = 1 คน)</label>
+   <textarea id="rt" rows="6" placeholder="คัดลอกคอลัมน์จาก Excel มาวางที่นี่ เช่น&#10;1&#9;เด็กชายสมชาย ใจดี&#10;2&#9;เด็กหญิงสมหญิง รักเรียน"></textarea>
+   <label>ลำดับคอลัมน์ที่วาง</label>
+   <select id="rc"><option value="auto">อัตโนมัติ (ตัวเลขล้วน = เลขที่, ที่เหลือ = ชื่อ, ชั้น/ห้อง)</option><option value="name">ชื่อ-สกุล</option><option value="id,name">เลขที่ | ชื่อ-สกุล</option><option value="name,id">ชื่อ-สกุล | เลขที่</option><option value="id,name,cls">เลขที่ | ชื่อ-สกุล | ชั้น/ห้อง</option><option value="name,id,cls">ชื่อ-สกุล | เลขที่ | ชั้น/ห้อง</option><option value="name,cls,id">ชื่อ-สกุล | ชั้น/ห้อง | เลขที่</option></select>
+   <label class="ck"><input type="checkbox" id="ra"> รันเลขที่ 1, 2, 3… ให้อัตโนมัติ เมื่อไม่มีเลขที่ในข้อมูล</label>
+   <p class="mu" id="ri" style="margin:6px 0"></p>
+   <div class="row"><button id="rall">ใช้รายชื่อนี้กับทุกชุด</button><button id="rclr">ล้างรายชื่อ</button></div>
+   <p class="mu" style="margin:6px 0 0">เมื่อมีรายชื่อ ระบบจะพิมพ์ 1 คน = 1 ใบ (A4 แนวนอนตัดครึ่ง = 2 คนต่อแผ่น) และใช้ชื่อ/เลขที่จากรายชื่อแทนช่องด้านบน</p>
+  </div>
+  <label>โลโก้ (ไม่บังคับ)</label>
+  <div class="row"><input type="file" id="logo" accept="image/*"><button id="nologo" style="flex:0 0 auto">ลบโลโก้</button></div>
+  <p class="mu">โลโก้จะถูกพิมพ์จางลงเล็กน้อย เพื่อไม่รบกวนการสแกน</p>
+  <button class="pri" id="print" style="width:100%;margin-top:6px">🖨️ พิมพ์กระดาษคำตอบ</button>
+  <p class="mu" id="ph" style="color:var(--bad)"></p>
+  <p class="mu">ในหน้าพิมพ์ให้เลือกขนาดกระดาษตรงกับที่ตั้งไว้ และสเกล 100% (ห้ามเลือก Fit to page)</p>
+  <button id="del" style="width:100%">🗑️ ลบชุดนี้</button>
+ </div>
+ <div class="card prev"><div id="sheet"></div></div>
+</section>
+<div id="pa"></div>
+
+<section id="t2" class="card hide noprint">
+ <b>เฉลยข้อสอบ</b> <span class="mu">แตะตัวเลือกเพื่อเลือกคำตอบที่ถูก (แตะซ้ำเพื่อยกเลิก) ข้อที่ไม่ใส่เฉลยจะไม่ถูกนับคะแนน</span>
+ <label>หรือพิมพ์เฉลยต่อกัน เช่น ABCDDACB… (ใช้ ก-จ หรือ 1-5 ได้)</label>
+ <div class="row"><input id="kt" placeholder="ABCDABCD / กขคงกข / 12341234"><button id="kta" style="flex:0 0 auto">ใช้เฉลยนี้</button></div>
+ <div class="kg" id="kg"></div>
+</section>
+
+<section id="t3" class="hide noprint">
+ <div class="grid">
+  <div class="card">
+   <b>สแกนกระดาษคำตอบ</b>
+   <p class="mu">กดเริ่มสแกน แล้วส่องกล้องให้เห็นสี่เหลี่ยมดำครบ 4 มุมของแผ่นเดียว (แนวตั้งไม่กลับหัว) ถือนิ่งสักครู่ ระบบจะอ่านและบันทึกคะแนนให้อัตโนมัติ</p>
+   <div class="row" style="margin-bottom:8px"><button class="pri" id="cam">📷 เริ่มสแกนด้วยกล้อง</button><button id="nxt" class="hide">➡️ สแกนใบต่อไป</button></div>
+   <video id="vid" playsinline muted class="hide"></video>
+   <canvas id="cv" class="hide"></canvas>
+   <p id="msg" class="mu"></p>
+   <label>ถ้าเปิดกล้องไม่ได้ ถ่ายหรือเลือกรูปแทน</label><input type="file" id="img" accept="image/*">
+  </div>
+  <div class="card">
+   <div class="mu" id="setn">ผลการตรวจ</div>
+   <div class="big" id="sc">–</div>
+   <div id="chips"></div>
+   <div class="mu" style="margin-top:10px">รายการที่สแกนแล้ว (แตะชื่อเพื่อแก้ไข)</div>
+   <div id="list"></div>
+  </div>
+ </div>
+</section>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LET=['A','B','C','D','E'];
+const LBL={en:LET,th:['ก','ข','ค','ง','จ'],num:['1','2','3','4','5']};
+const lab=c=>LBL[(c||cfg).ls]||LET;
+const PP={a4:{pw:210,ph:297,W:210,H:297,c:1},a5:{pw:148,ph:210,W:148,H:210,c:1},a4x2:{pw:297,ph:210,W:148.5,H:210,c:2}};
+const newCfg=()=>({paper:'a4',n:20,k:4,title:'แบบทดสอบ',school:'',subject:'',name:'',cls:'',id:'',date:'',logo:'',ls:'en',rt:'',rc:'auto',ra:true});
+const newSet=(name,c)=>({name,cfg:c||newCfg(),key:Array(100).fill(-1),res:[]});
+let sets=[newSet('ชุด 1')],cur=0,cfg,key,res,last=null;
+try{const s=JSON.parse(localStorage.getItem('omr2')||'null');if(s&&s.sets&&s.sets.length){sets=s.sets;cur=Math.min(s.cur||0,sets.length-1)}}catch(e){}
+const save=()=>{try{localStorage.setItem('omr2',JSON.stringify({sets,cur}))}catch(e){}};
+
+/* ---------- geometry (mm) shared by print and scan ---------- */
+function geom(c){const p=PP[c.paper]||PP.a4,W=p.W,H=p.H,nar=W<200,rows=Math.floor((H-30-82)/7.6)+1,mc=nar?3:4;
+ return{p,W,H,nar,rows,max:rows*mc,mk:[[15,15],[W-15,15],[W-15,H-15],[15,H-15]]}}
+function layout(c){const G=geom(c),b=[],cw=G.nar?44:45.5,nc=Math.max(1,Math.ceil(c.n/G.rows)),sp=cw*(nc-1)+10+(c.k-1)*7+2.6,ox=Math.max(G.nar?10:12,(G.W-sp)/2);for(let q=0;q<c.n;q++){const col=Math.floor(q/G.rows),r=q%G.rows,x0=ox+col*cw;b.push({x0,nx:x0+6,y:82+r*7.6,xs:Array.from({length:c.k},(_,j)=>x0+10+j*7)})}return b}
+const tw=(t,fs,k)=>[...String(t)].filter(ch=>!/[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/.test(ch)).length*fs*k;
+function fitLines(t,av,fs,min,k){t=String(t||'').trim();if(!t)return{l:[],fs};
+ if(tw(t,fs,k)<=av)return{l:[t],fs};
+ const f1=av/tw(t,1,k);if(f1>=min)return{l:[t],fs:f1};
+ const w=t.split(/\s+/);let best=null;
+ for(let i=1;i<w.length;i++){const a=w.slice(0,i).join(' '),b=w.slice(i).join(' '),m=Math.max(tw(a,1,k),tw(b,1,k));if(!best||m<best.m)best={a,b,m}}
+ if(best){const f=Math.min(fs*.85,av/best.m);return{l:[best.a,best.b],fs:Math.max(3.2,f)}}
+ return{l:[t],fs:Math.max(3,f1)}}
+function unit(c){
+ const G=geom(c),W=G.W,x2=W-14,mid=(56+x2)/2;let s='';
+ G.mk.forEach(([x,y])=>s+=`<rect x="${x-5}" y="${y-5}" width="10" height="10"/>`);
+ if(c.logo){const top=24,bot=G.nar?68:62,lh=Math.min(bot-top,36),lcy=(top+bot)/2;s+=`<image href="${c.logo}" x="22" y="${(lcy-lh/2).toFixed(2)}" width="32" height="${lh}" preserveAspectRatio="xMidYMid meet" opacity=".55"/>`}
+ const av=x2-56-2,T=fitLines(c.title,av,6.5,4.8,.55),S2=fitLines(c.school,av,3.8,2.8,.48),ty=T.l.length>1?[26,32.2]:[30],sy=T.l.length>1?38.6:36.2;
+ T.l.forEach((t,i)=>s+=`<text x="56" y="${ty[i]}" font-size="${T.fs.toFixed(2)}" font-weight="600">${esc(t)}</text>`);
+ if(S2.l.length)s+=`<text x="56" y="${sy}" font-size="${S2.fs.toFixed(2)}" fill="#444">${esc(S2.l[0])}</text>`;
+ const F=(lab,v,x1,xe,y,lw)=>{const av=xe-(x1+lw+1.5)-1,cn=[...String(v)].filter(ch=>!/[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/.test(ch)).length,fs=cn*1.73>av?Math.max(2,3.6*av/(cn*1.73)):3.6;return `<text x="${x1}" y="${y}" font-size="3.4">${lab}</text><line x1="${x1+lw}" y1="${y+1}" x2="${xe}" y2="${y+1}" stroke="#000" stroke-width=".25"/><text x="${x1+lw+1.5}" y="${y}" font-size="${fs.toFixed(2)}">${esc(v)}</text>`};
+ if(G.nar)s+=F('ชื่อ-สกุล',c.name,56,x2,45,15)+F('ชั้น/ห้อง',c.cls,56,x2,50.5,14)+F('เลขที่/รหัส',c.id,56,x2,56,17)+F('วิชา',c.subject,56,x2,61.5,8)+F('วันที่',c.date,56,x2,67,8);
+ else s+=F('ชื่อ-สกุล',c.name,56,x2,45,15)+F('ชั้น/ห้อง',c.cls,56,mid-3,53,14)+F('เลขที่/รหัส',c.id,mid+3,x2,53,17)+F('วิชา',c.subject,56,mid-3,61,8)+F('วันที่',c.date,mid+3,x2,61,8);
+ s+=`<text x="24" y="${G.nar?73:69}" font-size="${Math.min(2.6,(W-44)/tw('ใช้ปากกาหรือดินสอสีเข้ม ระบายวงกลมให้เต็ม 1 ข้อต่อ 1 วงกลม ห้ามพับหรือฉีกกระดาษ',1,.48)).toFixed(2)}" fill="#333">ใช้ปากกาหรือดินสอสีเข้ม ระบายวงกลมให้เต็ม 1 ข้อต่อ 1 วงกลม ห้ามพับหรือฉีกกระดาษ</text>`;
+ const b=layout(c);
+ for(let col=0;col*G.rows<c.n;col++)b[col*G.rows].xs.forEach((x,j)=>s+=`<text x="${x}" y="77.8" font-size="3" text-anchor="middle" fill="#333">${lab(c)[j]}</text>`);
+ b.forEach((o,q)=>{s+=`<text x="${o.nx}" y="${o.y+1.1}" font-size="3.2" text-anchor="end">${q+1}</text>`;o.xs.forEach(x=>s+=`<circle cx="${x}" cy="${o.y}" r="2.6" fill="#fff" stroke="#000" stroke-width=".35"/>`)});
+ return s}
+function sheetSVG(c,pair){const p=PP[c.paper]||PP.a4,u=unit(c);
+ return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${p.pw} ${p.ph}" width="100%" font-family="Sarabun,Tahoma,sans-serif" fill="#000" style="display:block"><rect width="${p.pw}" height="${p.ph}" fill="#fff"/>`+(p.c===2?`<g>${pair?unit(pair[0]):u}</g>${pair&&!pair[1]?'':`<g transform="translate(148.5 0)">${pair?unit(pair[1]):u}</g>`}<line x1="148.5" y1="0" x2="148.5" y2="210" stroke="#bbb" stroke-width=".2" stroke-dasharray="2 2"/>`:u)+'</svg>'}
+
+/* ---------- sets ---------- */
+function drawSets(){$('#sets').innerHTML=sets.map((s,i)=>`<button data-s="${i}" class="${i===cur?'on':''}" style="flex:0 0 auto">${esc(s.name)}</button>`).join('')+'<button id="add" style="flex:0 0 auto" title="เพิ่มชุดข้อสอบ">＋ เพิ่มชุด</button>'}
+$('#sets').onclick=e=>{const b=e.target.closest('button');if(!b)return;stopCam();
+ if(b.id==='add'){sets.push(newSet('ชุด '+(sets.length+1),{...cfg,logo:cfg.logo}));use(sets.length-1)}else use(+b.dataset.s)};
+$('#del').onclick=e=>{const b=e.target;if(sets.length<2){b.textContent='ต้องเหลืออย่างน้อย 1 ชุด';setTimeout(()=>b.textContent='🗑️ ลบชุดนี้',1800);return}
+ if(b.dataset.c){delete b.dataset.c;b.textContent='🗑️ ลบชุดนี้';sets.splice(cur,1);use(Math.max(0,cur-1))}else{b.dataset.c=1;b.textContent='กดอีกครั้งเพื่อยืนยันลบ';setTimeout(()=>{delete b.dataset.c;b.textContent='🗑️ ลบชุดนี้'},2500)}};
+function use(i){cur=i;({cfg,key,res}=sets[i]);
+ document.querySelectorAll('[data-k]').forEach(x=>x.value=cfg[x.dataset.k]);
+ $('#n').value=cfg.n;$('#k').value=cfg.k;$('#ls').value=cfg.ls||'en';$('#pp').value=cfg.paper;$('#sn').value=sets[i].name;$('#rt').value=cfg.rt||'';$('#rc').value=cfg.rc||'auto';$('#ra').checked=cfg.ra!==false;
+ last=null;$('#sc').textContent='–';$('#chips').innerHTML='';$('#setn').textContent='ผลการตรวจ · '+sets[i].name;
+ drawSets();draw();drawKey();showList()}
+$('#sn').oninput=e=>{sets[cur].name=e.target.value||'ชุด '+(cur+1);drawSets();save()};
+
+/* ---------- tab 1 ---------- */
+const FL=[['title','หัวข้อกระดาษคำตอบ'],['school','โรงเรียน / หน่วยงาน'],['subject','วิชา'],['name','ชื่อ-สกุล (เว้นว่างไว้ถ้าให้เขียนเอง)'],['cls','ชั้น/ห้อง'],['id','เลขที่ / รหัสประจำตัว'],['date','วันที่สอบ']];
+$('#flds').innerHTML=FL.map(([k,l])=>`<label>${l}</label><input data-k="${k}">`).join('');
+document.querySelectorAll('[data-k]').forEach(i=>i.oninput=()=>{cfg[i.dataset.k]=i.value;draw()});
+$('#n').oninput=e=>{cfg.n=Math.max(1,Math.min(100,+e.target.value||1));draw();drawKey()};
+$('#ls').onchange=e=>{cfg.ls=e.target.value;draw();drawKey();};
+$('#k').onchange=e=>{cfg.k=+e.target.value;draw();drawKey()};
+$('#pp').onchange=e=>{cfg.paper=e.target.value;draw();drawKey()};
+$('#logo').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const m=Math.min(1,300/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*m;c.height=im.height*m;c.getContext('2d').drawImage(im,0,0,c.width,c.height);cfg.logo=c.toDataURL('image/png');draw()};im.src=r.result};r.readAsDataURL(f)};
+$('#nologo').onclick=()=>{cfg.logo='';$('#logo').value='';draw()};
+/* ---------- roster ---------- */
+function students(){const t=(cfg.rt||'').trim();if(!t)return[];const mode=cfg.rc||'auto',out=[];
+ const HD=/^(ชื่อ|ชื่อ-สกุล|ชื่อ-นามสกุล|ชื่อ - สกุล|เลขที่|ลำดับ|ที่|รหัส|ชั้น|ห้อง|ชั้น\/ห้อง)$/;
+ t.split(/\r?\n/).forEach(L=>{if(!L.trim())return;
+  let cells=L.includes('\t')?L.split('\t'):L.includes(',')?L.split(','):[L];
+  cells=cells.map(x=>x.trim().replace(/^"+|"+$/g,'').trim());
+  if(cells.some(c=>HD.test(c)))return;
+  const o={name:'',id:'',cls:''};
+  if(mode==='auto'){let ne=cells.filter(Boolean);
+   if(ne.length===1){const m=ne[0].match(/^(\d+)[\s.)]+(.+)$/);if(m)ne=[m[1],m[2]]}
+   ne.forEach(c=>{if(!o.id&&/^\d{1,10}$/.test(c))o.id=c;else if(!o.name)o.name=c;else if(!o.cls)o.cls=c})}
+  else mode.split(',').forEach((f,i)=>{o[f]=cells[i]||''});
+  if(o.name||o.id)out.push(o)});
+ if(cfg.ra!==false)out.forEach((o,i)=>{if(!o.id)o.id=String(i+1)});
+ return out}
+const mk=s=>({...cfg,name:s.name,id:s.id,cls:s.cls||cfg.cls});
+function buildPrint(){const S=students(),p=PP[cfg.paper]||PP.a4;let pg=[];
+ if(!S.length)pg=[sheetSVG(cfg)];
+ else if(p.c===2){for(let i=0;i<S.length;i+=2)pg.push(sheetSVG(cfg,[mk(S[i]),S[i+1]?mk(S[i+1]):null]))}
+ else S.forEach(s=>pg.push(sheetSVG(mk(s))));
+ $('#pa').innerHTML=pg.map(h=>`<div class="pg">${h}</div>`).join('')}
+window.addEventListener('beforeprint',buildPrint);
+window.addEventListener('afterprint',()=>{$('#pa').innerHTML=''});
+$('#rt').oninput=e=>{cfg.rt=e.target.value;draw()};
+$('#rc').onchange=e=>{cfg.rc=e.target.value;draw()};
+$('#ra').onchange=e=>{cfg.ra=e.target.checked;draw()};
+$('#rclr').onclick=()=>{cfg.rt='';$('#rt').value='';draw()};
+$('#rall').onclick=e=>{sets.forEach(s=>{s.cfg.rt=cfg.rt;s.cfg.rc=cfg.rc;s.cfg.ra=cfg.ra});save();const b=e.target,o=b.textContent;b.textContent='✓ ใช้กับ '+sets.length+' ชุดแล้ว';setTimeout(()=>b.textContent=o,1800)};
+$('#print').onclick=()=>{buildPrint();const h=$('#ph');h.textContent='';let ok=true;try{window.print()}catch(e){ok=false}
+ if(!ok||window.self!==window.top)h.textContent='⚠️ ถ้าไม่มีหน้าต่างพิมพ์ขึ้น แปลว่าหน้านี้เปิดอยู่ในตัวดูตัวอย่างที่บล็อกการพิมพ์ — ให้ดาวน์โหลดไฟล์แล้วเปิดด้วย Chrome / Edge / Safari โดยตรง จากนั้นกดพิมพ์อีกครั้ง'};
+function draw(){const G=geom(cfg);if(cfg.n>G.max){cfg.n=G.max;$('#n').value=G.max}
+ $('#nl').textContent='จำนวนข้อ (สูงสุด '+G.max+')';$('#n').max=G.max;
+ const S=students(),p2=G.p.c===2;
+ $('#sheet').innerHTML=S.length?sheetSVG(mk(S[0]),p2?[mk(S[0]),S[1]?mk(S[1]):null]:undefined):sheetSVG(cfg);
+ $('#ri').textContent=S.length?`พบ ${S.length} คน → พิมพ์ ${p2?Math.ceil(S.length/2)+' แผ่น (2 คน/แผ่น)':S.length+' แผ่น'} · ตัวอย่างแสดงคนที่ 1${p2&&S[1]?'–2':''}`:'ยังไม่มีรายชื่อ — จะพิมพ์กระดาษเปล่า/ตามช่องด้านบน';$('#sheet').style.maxWidth=G.p.pw>G.p.ph?'640px':G.p.pw<200?'360px':'440px';
+ const r=document.documentElement.style;r.setProperty('--pw',G.p.pw+'mm');r.setProperty('--ph',G.p.ph+'mm');
+ $('#pg').textContent=`@page{size:${G.p.pw}mm ${G.p.ph}mm;margin:0}`;save()}
+
+/* ---------- tab 2 ---------- */
+function drawKey(){$('#kg').innerHTML=Array.from({length:cfg.n},(_,q)=>`<div class="kr"><b>${q+1}</b>${lab().slice(0,cfg.k).map((l,j)=>`<button class="kb${key[q]===j?' on':''}" data-q="${q}" data-j="${j}">${l}</button>`).join('')}</div>`).join('');save()}
+$('#kg').onclick=e=>{const b=e.target.closest('.kb');if(!b)return;const q=+b.dataset.q,j=+b.dataset.j;key[q]=key[q]===j?-1:j;drawKey()};
+$('#kta').onclick=()=>{const MP={};[LET,LBL.th,LBL.num].forEach(a=>a.forEach((x,i)=>MP[x]=i));[...$('#kt').value.toUpperCase().replace(/[^A-E\u0E01\u0E02\u0E04\u0E07\u0E081-5]/g,'')].forEach((c,q)=>{if(q<100&&MP[c]<cfg.k)key[q]=MP[c]});drawKey()};
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{if(b.dataset.t!=='t3')stopCam();document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));['t1','t2','t3'].forEach(t=>$('#'+t).classList.toggle('hide',t!==b.dataset.t))});
+
+/* ---------- scanning ---------- */
+function homog(s,d){const A=[],b=[];for(let i=0;i<4;i++){const[x,y]=s[i],[u,v]=d[i];A.push([x,y,1,0,0,0,-u*x,-u*y]);b.push(u);A.push([0,0,0,x,y,1,-v*x,-v*y]);b.push(v)}
+ for(let i=0;i<8;i++){let p=i;for(let r=i+1;r<8;r++)if(Math.abs(A[r][i])>Math.abs(A[p][i]))p=r;[A[i],A[p]]=[A[p],A[i]];[b[i],b[p]]=[b[p],b[i]];for(let r=i+1;r<8;r++){const f=A[r][i]/A[i][i];for(let c=i;c<8;c++)A[r][c]-=f*A[i][c];b[r]-=f*b[i]}}
+ const h=Array(8);for(let i=7;i>=0;i--){let t=b[i];for(let c=i+1;c<8;c++)t-=A[i][c]*h[c];h[i]=t/A[i][i]}return h}
+const warp=(h,x,y)=>{const w=h[6]*x+h[7]*y+1;return[(h[0]*x+h[1]*y+h[2])/w,(h[3]*x+h[4]*y+h[5])/w]};
+const loadImg=f=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=URL.createObjectURL(f)});
+
+function runScan(src,sw,sh,mx){
+ const G=geom(cfg),sc=mx/Math.max(sw,sh),W=Math.round(sw*sc),H=Math.round(sh*sc),cv=$('#cv');
+ cv.width=W;cv.height=H;const g=cv.getContext('2d',{willReadFrequently:true});g.drawImage(src,0,0,W,H);
+ const d=g.getImageData(0,0,W,H).data,N=W*H,gr=new Uint8Array(N);
+ for(let i=0;i<N;i++)gr[i]=d[4*i]*.3+d[4*i+1]*.59+d[4*i+2]*.11;
+ const hs=new Array(256).fill(0);for(let i=0;i<N;i++)hs[gr[i]]++;
+ let sum=0;for(let i=0;i<256;i++)sum+=i*hs[i];let sb=0,wb=0,mxv=0,T=128;
+ for(let t=0;t<256;t++){wb+=hs[t];if(!wb)continue;const wf=N-wb;if(!wf)break;sb+=t*hs[t];const mb=sb/wb,mf=(sum-sb)/wf,v=wb*wf*(mb-mf)**2;if(v>mxv){mxv=v;T=t}}
+ const vis=new Uint8Array(N),bl=[],st=[];
+ for(let p=0;p<N;p++){if(vis[p]||gr[p]>T)continue;let a=0,sx=0,sy=0,x1=W,x2=0,y1=H,y2=0;vis[p]=1;st.push(p);
+  while(st.length){const q=st.pop(),x=q%W,y=(q/W)|0;a++;sx+=x;sy+=y;if(x<x1)x1=x;if(x>x2)x2=x;if(y<y1)y1=y;if(y>y2)y2=y;
+   const nb=[x>0?q-1:-1,x<W-1?q+1:-1,y>0?q-W:-1,y<H-1?q+W:-1];for(const n of nb)if(n>=0&&!vis[n]&&gr[n]<=T){vis[n]=1;st.push(n)}}
+  if(a>40)bl.push({a,x:sx/a,y:sy/a,w:x2-x1+1,h:y2-y1+1})}
+ const cand=bl.filter(b=>b.w/b.h>.7&&b.w/b.h<1.43&&b.a/(b.w*b.h)>.7&&b.w>.01*Math.max(W,H)).sort((a,b)=>b.a-a.a).slice(0,10);
+ if(cand.length<4)throw'ยังไม่เห็นสี่เหลี่ยมดำครบ 4 มุม ลองขยับกล้องให้เห็นกระดาษทั้งแผ่นและแสงสม่ำเสมอ';
+ const pick=fn=>cand.reduce((m,c)=>fn(c)>fn(m)?c:m,cand[0]);
+ const TL=pick(c=>-(c.x+c.y)),TR=pick(c=>c.x-c.y),BRr=pick(c=>c.x+c.y),BL=pick(c=>c.y-c.x);
+ if(new Set([TL,TR,BRr,BL]).size<4)throw'จับมุมกระดาษไม่ได้ ลองถือให้ตรงและเห็นครบ 4 มุม';
+ const h=homog(G.mk,[TL,TR,BRr,BL].map(c=>[c.x,c.y])),
+  sc2=Math.hypot(TR.x-TL.x,TR.y-TL.y)/(G.W-30),sv=Math.hypot(BL.x-TL.x,BL.y-TL.y)/(G.H-30);
+ if(sv/sc2<.75||sv/sc2>1.33)throw'สัดส่วนกระดาษไม่ตรงกับที่ตั้งไว้ ตรวจขนาดกระดาษของชุดนี้ และสแกนทีละแผ่น';
+ const rp=2.6*sc2*.6;
+ const fillAt=(x,y)=>{let n=0,c=0;const r=Math.ceil(rp);for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(dx*dx+dy*dy>rp*rp)continue;const xx=Math.round(x+dx),yy=Math.round(y+dy);if(xx<0||yy<0||xx>=W||yy>=H)continue;n++;if(gr[yy*W+xx]<=T)c++}return n?c/n:0};
+ const b=layout(cfg),out=[];let score=0,total=0;
+ g.lineWidth=Math.max(2,sc2*.6);
+ b.forEach((o,q)=>{
+  const fl=o.xs.map(x=>{const[u,v]=warp(h,x,o.y);return{u,v,f:fillAt(u,v)}});
+  const on=fl.map((z,j)=>z.f>.42?j:-1).filter(j=>j>=0);
+  const ans=on.length===1?on[0]:on.length>1?'m':-1;let s2='n';
+  if(key[q]>=0){total++;if(ans===key[q]){score++;s2='1'}else s2='0'}
+  out.push({ans,st:s2});
+  fl.forEach((z,j)=>{const mk=on.includes(j),ck=key[q]===j;
+   if(mk||ck){g.beginPath();g.arc(z.u,z.v,rp*1.5,0,7);g.strokeStyle=mk?(key[q]<0?'#e0a800':ck?'#1e8449':'#c0392b'):'#2a7de1';g.stroke()}})});
+ return{out,score,total,sig:out.map(o=>o.ans).join(',')}}
+
+function showRes(r,auto){last=r;$('#cv').classList.remove('hide');$('#vid').classList.add('hide');
+ $('#msg').textContent=r.total?'วงเขียว = ถูก วงแดง = ผิด วงน้ำเงิน = เฉลยที่ถูก':'ชุดนี้ยังไม่ได้ใส่เฉลย (แท็บ 2) จึงยังไม่คิดคะแนน';
+ $('#sc').textContent=r.total?`${r.score} / ${r.total}`:'–';
+ $('#chips').innerHTML=r.out.map((o,q)=>`<span class="chip c${o.st}">${q+1}${o.ans===-1?' –':o.ans==='m'?' ✱':' '+lab()[o.ans]}</span>`).join('')+'<div class="mu">– = ไม่ได้ตอบ ✱ = ระบายเกิน 1 ช่อง</div>';
+ res.push({l:'ใบที่ '+(res.length+1),s:r.score,t:r.total});save();showList();
+ try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}}
+
+let stream=null,timer=null,prev='',busy=false;
+async function startCam(){const v=$('#vid');
+ try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false});
+  v.srcObject=stream;await v.play();v.classList.remove('hide');$('#cv').classList.add('hide');$('#nxt').classList.add('hide');
+  $('#cam').textContent='⏹ ปิดกล้อง';prev='';$('#msg').textContent='ส่องกล้องให้เห็นสี่เหลี่ยมดำครบ 4 มุม…';timer=setInterval(tick,700)}
+ catch(e){stream=null;$('#msg').textContent='เปิดกล้องไม่ได้ (ตรวจสิทธิ์กล้องของเบราว์เซอร์) ใช้ช่องถ่าย/เลือกรูปด้านล่างแทนได้'}}
+function stopCam(){clearInterval(timer);timer=null;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;$('#vid').classList.add('hide');$('#nxt').classList.add('hide');$('#cam').textContent='📷 เริ่มสแกนด้วยกล้อง'}
+function tick(){const v=$('#vid');if(busy||!v.videoWidth)return;busy=true;
+ try{const r=runScan(v,v.videoWidth,v.videoHeight,1100);
+  if(r.sig===prev){clearInterval(timer);timer=null;v.pause();showRes(r);$('#nxt').classList.remove('hide')}
+  else{prev=r.sig;$('#msg').textContent='กำลังอ่าน… ถือนิ่งๆ'}}
+ catch(e){prev='';$('#msg').textContent=e.message||e}
+ busy=false}
+$('#cam').onclick=()=>stream?stopCam():startCam();
+$('#nxt').onclick=()=>{const v=$('#vid');v.play();v.classList.remove('hide');$('#cv').classList.add('hide');$('#nxt').classList.add('hide');prev='';last=null;$('#msg').textContent='ส่องกล้องไปที่ใบต่อไป…';timer=setInterval(tick,700)};
+$('#img').onchange=async e=>{const f=e.target.files[0];if(!f)return;stopCam();$('#msg').textContent='กำลังตรวจ…';
+ try{const im=await loadImg(f);showRes(runScan(im,im.naturalWidth,im.naturalHeight,1400))}catch(err){$('#msg').textContent='⚠️ '+(err.message||err)}
+ e.target.value=''};
+
+function showList(){const a=res.length?res.reduce((x,r)=>x+r.s,0)/res.length:0;
+ $('#list').innerHTML=res.length?res.map((r,i)=>`<div class="li"><span contenteditable data-i="${i}">${esc(r.l)}</span><b>${r.s}/${r.t}</b><button data-d="${i}" style="padding:1px 8px">×</button></div>`).join('')+`<div class="mu">${res.length} ใบ · เฉลี่ย ${a.toFixed(2)} คะแนน · <a href="#" id="clr">ล้างรายการ</a></div>`:'<div class="mu">ยังไม่มี</div>';
+ const c=$('#clr');if(c)c.onclick=e=>{e.preventDefault();res.length=0;save();showList()}}
+$('#list').onfocusout=e=>{const i=e.target.dataset.i;if(i!=null&&res[+i]){res[+i].l=e.target.textContent;save()}};
+$('#list').onclick=e=>{const b=e.target.closest('[data-d]');if(b){res.splice(+b.dataset.d,1);save();showList()}};
+use(cur);
+</script></body></html>
